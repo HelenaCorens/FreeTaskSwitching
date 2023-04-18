@@ -38,7 +38,24 @@ nola_word = ["alley","ambulance","anchor","asteroid","balcony","barrel","bathtub
 "stove","stretcher","surfboard","tank","taxi","tent","toilet","tomb","tower","treadmill","tuba","vault",
 "volcano","windmill","windshield","yacht"
 ];
-
+//////////////
+/*
+Plan Steven
+var lists_list = [lism_word, lila_word, nosm_word, nola_word];
+var blocklists_list = [];
+for listi in lists_list{
+  shuffle listi
+}
+for blocki in range(n_blocks){
+  var blocklisti = []
+  for listi in lists_list{
+    blocklisti.append(listi[(blocki * 10), ((blocki + 1) * 10))])
+  }
+  shuffle blocklisti
+  blocklists_list.append(blocklisti)
+}
+*/
+//////////////
 // make an array of objects from the target stimuli
 var nola = [];
 var nosm = [];
