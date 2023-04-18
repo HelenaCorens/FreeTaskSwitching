@@ -42,18 +42,18 @@ nola_word = ["alley","ambulance","anchor","asteroid","balcony","barrel","bathtub
 /*
 Plan Steven
 var lists_list = [lism_word, lila_word, nosm_word, nola_word];
+var shuffled_list = [];
 var blocklists_list = [];
 for listi in lists_list{
-  shuffle listi
-}
+  shuffled_list.push(jsPsych.randomization.repeat(listi, 1));
+};
 for blocki in range(n_blocks){
-  var blocklisti = []
+  var blocklisti = [];
   for listi in lists_list{
-    blocklisti.append(listi[(blocki * 10), ((blocki + 1) * 10))])
-  }
-  shuffle blocklisti
-  blocklists_list.append(blocklisti)
-}
+    blocklisti.concat(listi[(blocki * 10), ((blocki + 1) * 10))]);
+  };
+  blocklists_list.push(jsPsych.randomization.repeat(blocklisti, 1));
+};
 */
 //////////////
 // make an array of objects from the target stimuli
