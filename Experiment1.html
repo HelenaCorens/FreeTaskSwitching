@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title></title>
+  <script src="jspsych-6.0.5/jspsych.js"></script> <!-- the main jsPsych library -->
+  <script src="jspsych-6.0.5/plugins/jspsych-html-keyboard-response.js"></script>
+  <script src="jspsych-6.0.5/plugins/jspsych-image-keyboard-response.js"></script>
+  <script src="jspsych-6.0.5/plugins/jspsych-instructions.js"></script>
+  <script src="jspsych-6.0.5/plugins/jspsych-survey-text-beta-6.1.js"></script> <!-- beta 6.1 version has the 'input required' function for text fields -->
+  <script src="jspsych-6.0.5/plugins/jspsych-survey-multi-choice.js"></script>
+  <script src="jspsych-6.0.5/plugins/jspsych-fullscreen.js"></script>
+  <script src="jspsych-6.0.5/plugins/jspsych-call-function.js"></script> <!-- javascript file containing affective priming stimuli must be loaded as utf-8 to read the Chinese pictographs!!! -->
+  <script src="custom_functions.js"></script>
+  <script src="jquery-1.7.1.min.js"></script> <!-- the jquery library is used to communicate with the server (to store the data) through "AJAX" and PHP -->
+  <script src="bowser.js"></script> <!-- a browser and operating system detector -->
+  <script src="sprintf.js"></script> <!-- format variables in a string, used for customizable feedback strings in which the variables are not yet declared -->
+  <script src="text_variables.js"></script> <!-- holds all the text variables for easy modification/translation -->
+  <link href="jspsych-6.0.5/css/jspsych.css" rel="stylesheet" type="text/css">
+  <script src="Stimulusfile.js"></script>
+  <script src="BISBAS.js"></script>
+  <script src="js/serverComm.js" type="text/javascript"></script>
+  </link> <!-- jsPsych css stylesheet -->
+</head>
+
+<body></body>
+<script>
+
+timeline =[];
+sum=0; // HC: For what is this? --> line 374: counting points/rewards of participants for feedback
+
+// IMPORTANT QUESTIONS: 1. How/where is 80%-20% implemented? external files? 
+// TO DO HC: RANDOMNESS: for every 40 trials, 10 words of each category are presented in a random order --> loopfunction? 
+
+// BROWSER TEST
+var browser_test = {
+  type: "html-keyboard-response",
+  choices: 'c',
+  stimulus: function(){
+    if (bowser.name == 'Chrome'){
+      return "<p style='font-size:4vw; line-height: 4vw;'> Welcome! Press the 'C' key to start! </p>"
+    } else {
+      setTimeout(function(){location.href="html/not_supported.html"}, 500);
+      return 'ERROR !!!'
+    }
+  }
+};
+
+timeline.push(browser_test)
+
+wrong_conditional=false;
+wrong_conditional_prac=false;
+countwrong = 0;
+
+subjID = jsPsych.randomization.randomID()
+prolificID = jsPsych.data.getURLVariable('PROLIFIC_PID')
+jsPsych.data.addProperties({subjID: subjID, prolificID: prolificID});//, prolificID: prolificID
+
+serverComm.register_subject(prolificID,
+  function(){ // this is the success callback. the function executes if the subject has a unique id
+    continue_success();
+  },
+  function(){ // this is the excluded callback. show excluded message.
+    document.querySelector('body').innerHTML = '<p style="color:white;"> Our records indicate that you have already started this experiment. Due to the nature of the experiment, restarting is not permitted.</p><p style="color:white;">If you believe this message is in error, you can contact the researchers at leslie.held@ugent.be. Our apologies for the trouble.</p>';
+  },
+  function(){ // this is the failure callback. show technical error message.
+    document.querySelector('body').innerHTML = '<p style="color:white;"> Our apologies. There was a technical error on our end while loading the experiment.</p><p style="color:white;">You will not be able to complete the experiment. We are sorry for the trouble.</p>';
+  }
+);
+
+var assigned_condition = null; // HC: null since it's random? // HC&L: 
+var n_conditions = 2;
+
+var save_to_db = { // HC: where is the data saved?
+  type: 'call-function',
+  func: function(){
+  data = jsPsych.data.get().filter({target: "target"});
+  serverComm.save_data(data.values());
+  }
+}
+
+var save_to_dbBISBAS = {
+  type: 'call-function',
+  func: function(){
+  data = jsPsych.data.get().filter({phase: "questionnaire"});
+  serverComm.save_data(data.values());
+  }
+}
+
+var fullscreen = {
+  type: 'fullscreen',
+  fullscreen_mode: true,
+};
+timeline.push(fullscreen)
+
+var consent = {
+  type: 'image-keyboard-response',
+  stimulus: 'img/instructionsLH.png',
+  response_ends_trial: true,
+  choices: ['space']
+};
+timeline.push(consent)
+
+// get participant's age and add it to the datafile
+var age = {
+  type: 'survey-text',
+  questions: [{
+    prompt: "Age?",
+    required: true
+  }, ],
+  on_finish: function(data) {
+    var responses = JSON.parse(data.responses);
+    var code = responses.Q0;
+    jsPsych.data.addProperties({
+      age: code
+    });
+  }
+};
+
+timeline.push(age)
+
+// get participant's gender and add it to the datafile
+var gender = {
+  type: 'survey-multi-choice',
+  questions: [{
+    prompt: "Sex?",
+    options: ['F', 'M','X'],
+    required: true
+  }, ],
+  on_finish: function(data) {
+    var responses = JSON.parse(data.responses);
+    var code = responses.Q0;
+    jsPsych.data.addProperties({
+      gender: code
+    });
+  }
+};
+
+timeline.push(gender)
+
+// get participant's handedness and add it to the datafile
+var handedness = {
+  type: 'survey-multi-choice',
+  questions: [{
+    prompt: "Handedness?",
+    options: ['Left', 'Right'],
+    required: true
+  }, ],
+  on_finish: function(data) {
+    var responses = JSON.parse(data.responses);
+    var code = responses.Q0;
+    jsPsych.data.addProperties({
+      handedness: code
+    });
+  }
+};
+
+timeline.push(handedness)
+
+var start_instructions = {
+  type: "instructions", // HC: instructions from img? 
+  button_label_next: label_next_button,
+  button_label_previous: label_previous_button,
+  pages: [
+          sprintf(instructions_text[0]), // HC: sprintf: for printing statements in the console
+          sprintf(instructions_text[1],insert1.toUpperCase(),insert2,insert3.toUpperCase(),insert4,task_hand_smaller.toUpperCase(),task_hand_larger.toUpperCase()),
+          sprintf(instructions_text[2],insert1.toUpperCase(),insert2, insert3.toUpperCase(),insert4, task_hand_smaller.toUpperCase(),task_hand_larger.toUpperCase()),
+        ],
+  show_clickable_nav: true,
+  allow_backward:true,
+}
+timeline.push(start_instructions);
+
+var pre_fixation = {
+  type: 'html-keyboard-response',
+  stimulus: '<div style="font-size:30px;">' + '+'+ '</div>',
+  trial_duration: 1500,
+  choices: jsPsych.NO_KEYS,
+}
+
+var target_to_feedback_screen = {
+  type: 'html-keyboard-response',
+  stimulus: '<div style="font-size:30px;"></div>',
+  trial_duration: 500,
+  choices: jsPsych.NO_KEYS,
+}
+
+var postfeedback_screen = {
+  type: 'html-keyboard-response',
+  stimulus: '<div style="font-size:30px;"></div>',
+  trial_duration: 1000,
+  choices: jsPsych.NO_KEYS,
+}
+
+var target = { // HC: confused about second half of var target (starting line233): // goes back to stimulusfile
+  type: 'html-keyboard-response',
+  stimulus: jsPsych.timelineVariable('stimulus'), // HC: timelineVariable explanation: https://jspsych.github.io/webbook/timeline-variables-1.html
+  choices: jsPsych.timelineVariable('choices'),
+  trial_duration: 3000,
+  data: jsPsych.timelineVariable('data'),
+  on_finish: function(data){
+    data.tarresp = jsPsych.pluginAPI.convertKeyCodeToKeyCharacter(data.key_press)
+    data.target = "target"
+    if (data.trialnr <41){
+      data.phase = "reward"
+    }else if (data.trialnr >=41){
+      data.phase = "masked"
+    }
+    if (data.tarresp == task_hand_living || data.tarresp == task_hand_nonliving){
+      data.choice = "animacy"
+      correctresp = data.correct_animacy
+    }else if (data.tarresp == task_hand_smaller || data.tarresp == task_hand_larger){
+      data.choice = "size"
+      correctresp = data.correct_size
+    }else if (data.tarresp ==null){
+      data.choice = null
+      correctresp = 0
+    }
+    correct = false // HC: why this? or what is the meaning? -> When answer is false, you get masked answer w trialnr >=41?
+    if (data.tarresp == correctresp){
+      correct = true
+    }
+    data.correcttarresp = correct
+    if (data.transition == "nonfirst"){ // HC: nonfirst? 
+      data.lasttask = jsPsych.data.get().filter({target: "target"}).last(2).values()[0].choice//wrong
+      if (data.lasttask != data.choice & data.lasttask != null){
+        data.transition_new = "switch"
+      }else if (data.lasttask == data.choice & data.lasttask != null){ //HC: data.lasttask != null: so in case participant does actually respond?
+        data.transition_new ="repetition"
+      }else if (data.lasttask == null){
+        data.transition_new = "postnull" //HC: in case the participant doesn't respond? 
+      }
+    }else if (data.transition == "first"){
+      data.transition_new = "first"
+    }
+    if (data.correcttarresp==true){ // HC: ask Leslie for explanation of structure
+      if (data.transition_new == "switch"){
+        if (data.rewnr == 1){
+          if (data.group == "condswitch"){
+            data.reward = 0.01
+          }else{
+            data.reward = 0.05
+          }
+        }else{
+          if (data.group == "condswitch"){
+            data.reward = 0.05
+          }else{
+            data.reward = 0.01
+          }
+        }
+      }else if (data.transition_new == "repetition"){
+        if (data.rewnr == 1){
+          if (data.group == "condswitch"){
+            data.reward = 0.05
+          }else{
+            data.reward = 0.01
+          }
+        }else{
+          if (data.group == "condswitch"){
+            data.reward = 0.01
+          }else{
+            data.reward = 0.05
+          }
+        }
+      }else if (data.transition=="first" || data.transition_new =="postnull"){ //HC: postnull?
+        if (data.rewnr == 1){
+          data.reward = 0.05
+        }else{
+          data.reward = 0.01
+        }
+      }
+    }else{
+      data.reward = 0
+    }
+    if (!document.fullscreenElement){
+      data.fullscreen = 0
+    }else{
+      data.fullscreen = 1
+    }
+  }
+}
+
+//timeline.push(target)
+
+var points = {
+  type: 'html-keyboard-response',
+  data: jsPsych.timelineVariable('data'),
+  stimulus: function(data){
+    var reward = jsPsych.data.get().filter({target: "target"}).last().values()[0].reward
+    var correcttarresp = jsPsych.data.get().filter({target: "target"}).last().values()[0].correcttarresp
+    var rewnr = jsPsych.data.get().filter({target: "target"}).last().values()[0].rewnr
+    if (reward == 0.01){
+      return '<div style="font-size:30px;">' +'<p>+1&#162;</p>' + '</div>'
+    }else if (reward == 0.05){
+      return '<div style="font-size:30px;">' +'<p>+5&#162;</p>' + '</div>'
+    }else if (reward == 0){
+      return '<div style="font-size:30px;"></div>'
+    }
+  },
+  on_finish: function(data){
+    data.targetonly = "target"
+  },
+  trial_duration: 500,
+  choices: jsPsych.NO_KEYS,
+};
+
+var points_masked = {
+  type: 'html-keyboard-response',
+  data: jsPsych.timelineVariable('data'),
+  stimulus: function(){
+    var correcttarresp = jsPsych.data.get().filter({target: "target"}).last().values()[0].correcttarresp
+    var reward = jsPsych.data.get().filter({target: "target"}).last().values()[0].reward
+    var rewnr = jsPsych.data.get().filter({target: "target"}).last().values()[0].rewnr
+    if (reward == 0.01 | reward == 0.05){
+      return '<div style="font-size:30px;">##</div>'
+    }else if (reward==0){
+      return '<div style="font-size:30px;"></div>'
+    }
+  },
+  on_finish: function(data){
+    data.targetonly = "target"
+  },
+  trial_duration: 500,
+  choices: jsPsych.NO_KEYS,
+};
+
+
+var points_conditional = {
+  timeline: [points_masked], // HC: why here points_masked and at line 337 points? 
+  conditional_function: function(){
+    var phase = jsPsych.data.get().filter({target: "target"}).last().values()[0].phase
+    if (phase =="masked") { //41
+      return true;
+    }else{
+      return false;
+    }
+  }
+}
+
+var points_masked_conditional = {
+  timeline: [points],
+  conditional_function: function(){
+    var phase = jsPsych.data.get().filter({target: "target"}).last().values()[0].phase
+    if (phase =="reward") { //41
+      return true;
+    }else{
+      return false;
+    }
+  }
+}
+
+var main_procedure_block1 = {
+  timeline: [pre_fixation,target,target_to_feedback_screen,points_conditional,points_masked_conditional,postfeedback_screen],
+  timeline_variables: current_trial_list_block1,
+}
+
+var main_procedure_block2 = {
+  timeline: [pre_fixation,target,target_to_feedback_screen,points_conditional,points_masked_conditional,postfeedback_screen],//
+  timeline_variables: current_trial_list_block2,
+}
+
+var main_procedure_block3 = {
+  timeline: [pre_fixation,target,target_to_feedback_screen,points_conditional,points_masked_conditional,postfeedback_screen],
+  timeline_variables: current_trial_list_block3,
+}
+
+var main_procedure_block4 = {
+  timeline: [pre_fixation,target,target_to_feedback_screen,points_conditional,points_masked_conditional,postfeedback_screen],
+  timeline_variables: current_trial_list_block4,
+}
+
+var break_block1 = {
+  type: 'html-keyboard-response',
+  stimulus: function() {
+    sum = getpayouttrials(0)[0];
+    var show2 ='<div>You are now finished with the first block.<br><br>';
+    show2 +='In this block you gained &#xa3;'+ Math.round(sum*100)/100 + '!<br><br>'; //HC: sum=0 line30
+    show2 +='You can take a short break and start with the next block as soon as you are ready by pressing the space bar.<br><br>';
+    show2 +='Reminder:<br>';
+    show2 += 'You can choose to do either task at each trial.<br>';
+    show2 += '"'+insert1.toUpperCase()+'" button '+ insert2 +', "'+ insert3.toUpperCase()+'" button '+ insert4 +'<br>'; // zie: stimfile: insert1: taskhand(non)living - insert2: (in)animate - insert3: taskhand(non)living - insert4: (in)animate
+    show2 += '"'+task_hand_smaller.toUpperCase()+'" button smaller, "'+task_hand_larger.toUpperCase()+'" button larger</div>';
+    return show2;
+  },
+  choices: ['space'],
+  on_finish: function(){
+    jsPsych.data.addProperties({
+      payout1: sum
+    });
+    sum = 0
+  }
+}
+
+var break_block2 = {
+  type: 'html-keyboard-response',
+  stimulus: function() {
+    sum = getpayouttrials(1)[0];
+    var show2 ='<div>You are now finished with the second block.<br><br>';
+    show2 +='In this block you gained &#xa3;'+ Math.round(sum*100)/100 + '!<br><br>';
+    show2 +='You can take a short break and start with the next block as soon as you are ready by pressing the space bar.<br><br>';
+    show2 +='Reminder:<br>';
+    show2 += 'You can choose to do either task at each trial.<br>';
+    show2 += '"'+insert1.toUpperCase()+'" button '+ insert2 +', "'+ insert3.toUpperCase()+'" button '+ insert4 +'<br>';
+    show2 += '"'+task_hand_smaller.toUpperCase()+'" button smaller, "'+task_hand_larger.toUpperCase()+'" button larger</div>';
+    return show2;
+  },
+  choices: ['space'],
+  on_finish: function(){
+    jsPsych.data.addProperties({
+      payout2: sum
+    });
+    sum = 0
+  }
+}
+
+var break_block3 = {
+  type: 'html-keyboard-response',
+  stimulus: function() {
+    sum = getpayouttrials(2)[0];
+    var show2 ='<div>You are now finished with the third block.<br><br>';
+    show2 +='In this block you gained &#xa3;'+ Math.round(sum*100)/100 + '!<br><br>';
+    show2 +='You can take a short break and start with the next block as soon as you are ready by pressing the space bar.<br><br>';
+    show2 +='Reminder:<br>';
+    show2 += 'You can choose to do either task at each trial.<br>';
+    show2 += '"'+insert1.toUpperCase()+'" button '+ insert2 +', "'+ insert3.toUpperCase()+'" button '+ insert4 +'<br>';
+    show2 += '"'+task_hand_smaller.toUpperCase()+'" button smaller, "'+task_hand_larger.toUpperCase()+'" button larger</div>';
+    return show2;
+  },
+  choices: ['space'],
+  on_finish: function(){
+    jsPsych.data.addProperties({
+      payout3: sum
+    });
+    sum = 0
+  }
+}
+
+var start_main_inst = {
+  type: "instructions",
+  button_label_next: label_next_button,
+  button_label_previous: label_previous_button,
+  pages: [
+    sprintf(startmain_text[0]),
+    sprintf(startmain_text[1],insert1.toUpperCase(),insert2, insert3.toUpperCase(),insert4,task_hand_smaller.toUpperCase(),task_hand_larger.toUpperCase())
+        ],
+  show_clickable_nav: true,
+}
+
+var survey_1 = {
+  type: 'survey-text',
+  button_label: label_next_button,
+  questions:[
+    {prompt: "Did you have the feeling that some trials were rewarded more (more +5&#162;) than others or do you think it was arbitrary? ",rows: 5, columns: 60} //HC: what is the meaning of +5&#162?
+  ],
+  on_finish: function(data){
+    var responses = JSON.parse(data.responses);
+    var code = responses.Q0;
+    data.responses = code
+    data.quesnum = "contingency1"
+    data.phase = "questionnaire"
+}
+}
+
+var survey_2 = {
+  type: 'survey-multi-choice',
+  button_label: label_next_button,
+  questions: [
+    {prompt: 'For some participants, trials were rewarded more +5&#162; if they decided to do the same task as on the previous trial, '+'<br>'+
+    'compared to choosing the other task. For other participants, it was the other way around: Task repetitions were rewarded less than task switches.'+'<br>'+
+    'For yet another group, it was arbitrary and each trial was rewarded at random with 1&#162; or 5&#162;.'+'<br>'+'<br>'+
+    'To which group do you think you belong?',
+    options: ["Task repetitions were rewarded more","Task switches were rewarded more","The rewards were arbitrary and task repetitions and switches were rewarded equally"], required:true},
+  ],
+  on_finish: function(data){
+    var responses = JSON.parse(data.responses);
+    var code = responses.Q0;
+    data.responses = code
+    data.quesnum = "contingency1"
+    data.phase = "questionnaire"
+}
+}
+
+function getpayouttrials(blocknr) {
+  for (i = 1; i < 81; i++) {//81
+    var reward = jsPsych.data.get().filter({target: "target", blocknr: blocknr, trialnr: i}).select('reward').values[0];
+    sum = sum + reward
+  }
+  return [sum]//payout
+}
+
+var payout = {
+  type: 'html-keyboard-response',
+  stimulus: function(data) {
+    sum = getpayouttrials(3)[0];
+    var payout1 = jsPsych.data.get().last().values()[0].payout1
+    var payout2 = jsPsych.data.get().last().values()[0].payout2
+    var payout3 = jsPsych.data.get().last().values()[0].payout3
+    totalsum = payout1+payout2+payout3+sum
+    var show2 ='<div>You are now finished with the fourth block and completed the main part of the experiment.<br><br>';
+    show2 +='In this block you gained &#xa3;'+ Math.round(sum*100)/100 + '!<br><br>';
+    show2 +='This means that you gained &#xa3;'+ Math.round(totalsum*100)/100 + ' in total that we will pay you as additional bonus if you are among the top 10 percent!<br><br>';
+    show2 +='We will compute who is among the top 10 percent, and pay out the additional bonus, as soon as we finished data collection for all participants (within three weeks).<br>';
+    show2 +='Importantly, before finishing the experiment, we will ask you to complete a few more questions. Answering them is required to receive the monetary compensation.<br><br>';
+    show2 += 'Press the space bar when you are ready to start the questionnaires.</div>';
+    return show2;
+  },
+  choices: ['space'],
+  on_finish: function(){
+    jsPsych.data.addProperties({
+      payout4: sum,
+      totalpayout: totalsum
+    });
+  }
+}
+
+var BISBASques = {
+  type: 'survey-multi-choice',
+  questions: bisbas_questions,
+  preamble: bisbas_preamble,
+  on_finish: function(data){
+    data.phase = 'questionnaire'
+    data.quesnum = "bisbas"
+  }
+}
+
+var endexp = {
+  type: 'html-keyboard-response',
+  stimulus: '<div>You reached the end of the experiment.<br><br>Thanks again for your participation!<br><br>You will be redirected to Prolific in a few seconds.</div>',
+  choices: jsPsych.NO_KEYS,
+  trial_duration: 5000
+}
+
+var experiment = {
+  timeline: [start_main_inst,main_procedure_block1,break_block1,fullscreen,main_procedure_block2,break_block2,main_procedure_block3,break_block3,fullscreen,main_procedure_block4,payout,survey_1,survey_2,save_to_db,BISBASques,save_to_dbBISBAS,endexp]//
+}
+
+var correct_feedback = {
+  type: 'html-keyboard-response',
+  stimulus: function() {
+    var last_resp_correct = jsPsych.data.get().filter({target: "target"}).last().values()[0].correcttarresp;
+    var feedback_text = '<div style="font-size:30px;">' +'<p>ERROR!</p>' + '</div>';
+    if (last_resp_correct == true) {
+      feedback_text = '<div style="font-size:30px;">' +'<p>CORRECT!</p>' + '</div>'
+    }
+    return feedback_text
+  },
+  choices: jsPsych.NO_KEYS,
+  trial_duration: 500,
+}
+
+var target_practice_first_task = { // HC: Why practice_first_task after all the above?
+  type: 'html-keyboard-response',
+  stimulus: jsPsych.timelineVariable('stimulus'),
+  choices: jsPsych.timelineVariable('choices'),
+  trial_duration: 3000,
+  data: jsPsych.timelineVariable('data'),
+  on_finish: function(data){
+    data.tarresp = jsPsych.pluginAPI.convertKeyCodeToKeyCharacter(data.key_press)
+    data.target = "target"
+    if (data.tarresp == task_hand_living || data.tarresp == task_hand_nonliving){
+      data.choice = "animacy"
+      correctresp = data.correct_animacy
+    }else if (data.tarresp == task_hand_smaller || data.tarresp == task_hand_larger){
+      data.choice = "size"
+      correctresp = data.correct_size
+    }else if (data.tarresp ==null){
+      data.choice = null
+      correctresp = 0
+    }
+    correct = false
+    if (data.tarresp == correctresp){
+      correct = true
+    }
+    data.correcttarresp = correct
+    }
+  };
+
+var too_slow_message = {
+  type: 'html-keyboard-response',
+  stimulus: '<div style="font-size:30px;">' + 'TOO SLOW!'+ '</div>',
+  trial_duration: 500,
+  choices: jsPsych.NO_KEYS,
+}
+
+var too_slow_cond = {
+  timeline: [too_slow_message],
+  conditional_function: function() {
+    var tarresp = jsPsych.data.get().filter({target: "target"}).last().values()[0].tarresp;
+    if (tarresp == null){
+      return true;
+    }else{
+      return false;
+    }
+  }
+}
+
+var practice_timeline = {
+  timeline: [pre_fixation,target_practice_first_task,too_slow_cond,target_to_feedback_screen,correct_feedback,postfeedback_screen],
+  timeline_variables: practice_list,
+}
+
+timeline.push(practice_timeline)
+timeline.push(experiment)
+//timeline.push(main_procedure_block1)
+
+serverComm.assign_condition(subjID, n_conditions,
+  function(response){
+    assigned_condition = response.assignedCondition
+    if (assigned_condition == 0){
+      pregroup= 'condswitch'
+    }else{
+      pregroup= 'condrepetition' 
+    }
+    jsPsych.data.addProperties({group: pregroup});
+    jsPsych.init({
+    timeline: timeline,
+    on_interaction_data_update: function(data) {
+    jsPsych.data.get().addToLast(data)
+    },
+    on_finish: function() {
+      //jsPsych.data.displayData();
+    window.location.href = 'https://app.prolific.co/submissions/complete?cc=8CE230FD' // change this later
+    }
+    });
+  },
+  function(){
+    document.querySelector('body').innerHTML = '<p>Our apologies. There was a technical error on our end while loading the experiment.</p><p>You will not be able to complete the experiment. We are sorry for the trouble.</p>';
+  }
+);
+
+</script>
+
+</html>

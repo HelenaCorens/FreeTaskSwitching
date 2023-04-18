@@ -1,0 +1,9 @@
+Group assignment:
+Experiment1 is the reward switch condition
+Experiment2 is the reward repeat condition
+
+Versioning:
+- Hashtag is after implementing the hashtag change but it had the rewards after conditioning wrong
+- Hashtag 2 is the good version in terms of rewards
+- Final is the version where letters in the instructions are capitalized and where reminders
+on the correct key mapping are given; it also contains a browser check
