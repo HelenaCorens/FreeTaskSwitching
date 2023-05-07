@@ -65,26 +65,23 @@ for (i = 0; i < nola_word.length; i++) {
   };
 };
 
-//////////////
-/*
-IDEA HC:
+
+// IDEA HC:
 var lists_list = [lism_word, lila_word, nosm_word, nola_word]; 
 var shuffled_list = []; // empty list of lists_list but shuffled later
-for listi in lists_list{
+for (var listi = 0; listi< lists_list.length; listi++){
   shuffled_list.push(jsPsych.randomization.repeat(listi, 1)); // each has 4 lists shuffled within each category
 };
 var blocklists_list = []; 
 var n_blocks = 8 // 4 blocks but within each block 2 parts (cued - noncued)
-for blocki in range(n_blocks){
+for (var blocki = 0; blocki< n_blocks; blocki++){
   var blocklisti = [];
-  for listi in shuffled_list{
-    blocklisti.concat(listi[(blocki * 10), ((blocki + 1) * 10))]); // take 10 words of each category; already shuffled within category BUT still lism-lila... non shuffled
+  for (var listi = 0; listi< shuffled_list.length; listi++){
+    console.log(listi)
+    blocklisti.concat(listi.slice((blocki * 10), ((blocki + 1) * 10))); // take 10 words of each category; already shuffled within category BUT still lism-lila... non shuffled
   };
   blocklists_list.push(jsPsych.randomization.repeat(blocklisti, 1)); //shuffle blocklist so you don't have each category next to another // blocklist_list n blocks long - each list in this should have same amount of words
 };
-*/
-//////////////
-
 
 // OLD: randomize these arrays so that the first 20 stimuli are not always shown in the first block
 // OLD HC: take 1/4 of each, shuffle them and then put them in 
@@ -95,10 +92,13 @@ for blocki in range(n_blocks){
 
 // OLD: assign the random stimuli to the cued or the free task switching phase / HC: only free stimuli but just wrong comment from earlier experiment
 // NEW: INSTEAD OF CUED_STIM: USE BLOCKLISTS_LIST WHEN CHANGING: LOOK OUT FOR CUED_STIM IMPLEMENTATIONS
+
 cued_stim = nola.concat(nosm,lila,lism); // HC: Concat(): merging arrays together (so nola+nosm+lila+lism) HC: the name is wrong but it's implemented everywhere
+
 // HC: So, cued_stim = merging of the four categories; SOLUTION? instead of trowing it all together - make seperate categories for randomisation in categories itself
-//console.log(cued_stim)
-//console.log(cued_stim[240+5].stimulus)
+console.log(cued_stim)
+console.log(cued_stim[240+5].stimulus)
+console.log(blocklists_list)
 
 var hand = [{
   left: 's',
@@ -143,124 +143,133 @@ var first_prac_task = jsPsych.randomization.repeat(first_prac_task, 1);
 
 function makestimlist(slice){ // HC: check line 228/ creates list per block (same amount of tasks) but not same amount of words per category --> work on this!!!
 
-//non_word_array = ['WISSEL','HERHAAL'];
-// Leslie sliced her stimlist in 0-80-160-240-320 (but than those 80, no equal amount of every category - arbitrary )
+    //non_word_array = ['WISSEL','HERHAAL'];
+    // Leslie sliced her stimlist in 0-80-160-240-320 (but than those 80, no equal amount of every category - arbitrary )
 
-var ntrials = 80 // HC: CHANGE TO 40 // previous hc idea: I still want 80 trials but within these 80 trials --> 1/4 nola; 1/4 nosm; 1/4 lila; 1/4 lism & randomised within
+  var ntrials = 80 // HC: CHANGE TO 40 // previous hc idea: I still want 80 trials but within these 80 trials --> 1/4 nola; 1/4 nosm; 1/4 lila; 1/4 lism & randomised within
 
-current_trial_list = []
+  current_trial_list = []
 
-// fill it with the first properties you need: i'm doing transition and task now, but you should initialize all the others you need (but you can also do this as you work on it)
-for (i =0; i < ntrials; i++){
-current_trial_list.push({data: {task_hand_living:task_hand_living}}) // HC: is it correct that it is 2 times task_hand_living
-}
-//transition: transition_array[i],
+  // fill it with the first properties you need: i'm doing transition and task now, but you should initialize all the others you need (but you can also do this as you work on it)
+  for (i =0; i < ntrials; i++){
+      current_trial_list.push({data: {task_hand_living:task_hand_living}}) // HC: is it correct that it is 2 times task_hand_living
+    }
+  //transition: transition_array[i],
 
-//current_trial_list[0].data.phase = 'exp'
-current_trial_list[0].choices = [task_hand_smaller, task_hand_larger,task_hand_living,task_hand_nonliving];
-//console.log(current_trial_list[0].choices)
-if (blocklists_list.data.category=='nola'){ // HC NEW: 'blocklists_list' was previously: "cued_stim[slice]"
-  current_trial_list[0].data.correct_size = task_hand_larger;
-  current_trial_list[0].data.correct_animacy= task_hand_nonliving;
-}else if (blocklists_list.data.category=='nosm'){ // HC NEW: 'blocklists_list' was previously: "cued_stim[slice]"
-  current_trial_list[0].data.correct_size = task_hand_smaller;
-  current_trial_list[0].data.correct_animacy = task_hand_nonliving;
-}else if (blocklists_list.data.category=='lila'){ // HC NEW: 'blocklists_list' was previously: "cued_stim[slice]"
-  current_trial_list[0].data.correct_size= task_hand_larger;
-  current_trial_list[0].data.correct_animacy = task_hand_living;
-}else if (blocklists_list.data.category=='lism'){ // HC NEW: 'blocklists_list' was previously: "cued_stim[slice]"
-  current_trial_list[0].data.correct_size= task_hand_smaller;
-  current_trial_list[0].data.correct_animacy = task_hand_living;
-}
-current_trial_list[0].stimulus = blocklists_list.stimulus; //HC NEW: 'blocklists_list' was previously: "cued_stim[slice] 
-// HC OLD: slice creates all the functions - slice 0-80-160 --> line 226// I should shuffle within category (Leslie shuffles everything and takes first 80 than next slice of another 80 - )
-//console.log(current_trial_list[0].stimulus)
-current_trial_list[0].rewnr = jsPsych.randomization.sampleWithoutReplacement([1,2,3,4,5,6,7,8,9,10],1)[0] // HC: I changed it since leslie only had 1 - 5 (20%)// if its 1 --> 10% if number is higher than 1: 90% of reward
-current_trial_list[0].data.rewnr = current_trial_list[0].rewnr
-current_trial_list[0].data.trialnr = 1;
-current_trial_list[0].trialnr = 1;
-current_trial_list[0].data.blocknr = slice/80; //!!! HC: CHANGE TO 40 // change this of 80 within 1/4 of each category
-current_trial_list[0].data.category = blocklists_list.data.category; // HC NEW: 'blocklists_list' was previously: "cued_stim[slice]"
-current_trial_list[0].data.transition = "first";
-if (task_hand_living == task_hand_animacy.left){
-  if (blocklists_list.data.category == 'lism' || blocklists_list.data.category == 'nola'){ // HC NEW: 'blocklists_list' was previously: "cued_stim[slice]"
-    current_trial_list[0].data.congruency = 'congruent'
-  }else{
-    current_trial_list[0].data.congruency = 'incongruent'
+  //current_trial_list[0].data.phase = 'exp'
+  current_trial_list[0].choices = [task_hand_smaller, task_hand_larger,task_hand_living,task_hand_nonliving];
+  //console.log(current_trial_list[0].choices)
+  if (blocklists_list.data.category=='nola'){ // HC NEW: 'blocklists_list' was previously: "cued_stim[slice]"
+    current_trial_list[0].data.correct_size = task_hand_larger;
+    current_trial_list[0].data.correct_animacy= task_hand_nonliving;
+  }else if (blocklists_list.data.category=='nosm'){ // HC NEW: 'blocklists_list' was previously: "cued_stim[slice]"
+    current_trial_list[0].data.correct_size = task_hand_smaller;
+    current_trial_list[0].data.correct_animacy = task_hand_nonliving;
+  }else if (blocklists_list.data.category=='lila'){ // HC NEW: 'blocklists_list' was previously: "cued_stim[slice]"
+    current_trial_list[0].data.correct_size= task_hand_larger;
+    current_trial_list[0].data.correct_animacy = task_hand_living;
+  }else if (blocklists_list.data.category=='lism'){ // HC NEW: 'blocklists_list' was previously: "cued_stim[slice]"
+    current_trial_list[0].data.correct_size= task_hand_smaller;
+    current_trial_list[0].data.correct_animacy = task_hand_living;
   }
-}else if (task_hand_living == task_hand_animacy.right){
-  if (blocklists_list.data.category == 'nosm' || blocklists_list.data.category == 'lila'){ // HC NEW: 'blocklists_list' was previously: "cued_stim[slice]"
-    current_trial_list[0].data.congruency = 'congruent'
-  }else{
-    current_trial_list[0].data.congruency = 'incongruent'
-  }
-};
+  current_trial_list[0].stimulus = blocklists_list.stimulus; //HC NEW: 'blocklists_list' was previously: "cued_stim[slice] 
+  // HC OLD: slice creates all the functions - slice 0-80-160 --> line 226// I should shuffle within category (Leslie shuffles everything and takes first 80 than next slice of another 80 - )
+  //console.log(current_trial_list[0].stimulus)
+  current_trial_list[0].rewnr = jsPsych.randomization.sampleWithoutReplacement([1,2,3,4,5,6,7,8,9,10],1)[0] // HC: I changed it since leslie only had 1 - 5 (20%)// if its 1 --> 10% if number is higher than 1: 90% of reward
+  current_trial_list[0].data.rewnr = current_trial_list[0].rewnr
+  current_trial_list[0].data.trialnr = 1;
+  current_trial_list[0].trialnr = 1;
+  current_trial_list[0].data.blocknr = slice/80; //!!! HC: CHANGE TO 40 // change this of 80 within 1/4 of each category
+  current_trial_list[0].data.category = blocklists_list.data.category; // HC NEW: 'blocklists_list' was previously: "cued_stim[slice]"
+  current_trial_list[0].data.transition = "first";
+  if (task_hand_living == task_hand_animacy.left){
+    if (blocklists_list.data.category == 'lism' || blocklists_list.data.category == 'nola'){ // HC NEW: 'blocklists_list' was previously: "cued_stim[slice]"
+      current_trial_list[0].data.congruency = 'congruent'
+    }else{
+      current_trial_list[0].data.congruency = 'incongruent'
+    }
+  }else if (task_hand_living == task_hand_animacy.right){
+    if (blocklists_list.data.category == 'nosm' || blocklists_list.data.category == 'lila'){ // HC NEW: 'blocklists_list' was previously: "cued_stim[slice]"
+      current_trial_list[0].data.congruency = 'congruent'
+    }else{
+      current_trial_list[0].data.congruency = 'incongruent'
+    }
+  };
 
-// HC NEW: PROBLEM ARRISES WITH cued_stim[i+slice] -> What to do with the i+slice? alternative? 
-// which hand is correct with response key
-for (i = 1; i<ntrials; i++){
-current_trial_list[i].stimulus = cued_stim[i+slice].stimulus; // HC NEW PROBLEM: Here cued_stim[i+slice] what to do with the i??????
-//console.log(current_trial_list[i].stimulus)
-current_trial_list[i].choices = [task_hand_smaller, task_hand_larger,task_hand_living,task_hand_nonliving];
-if (cued_stim[i+slice].data.category=='nola'){
-  current_trial_list[i].data.correct_size = task_hand_larger;
-  current_trial_list[i].data.correct_animacy= task_hand_nonliving;
-}else if (cued_stim[i+slice].data.category=='nosm'){
-  current_trial_list[i].data.correct_size = task_hand_smaller;
-  current_trial_list[i].data.correct_animacy = task_hand_nonliving;
-}else if (cued_stim[i+slice].data.category=='lila'){
-  current_trial_list[i].data.correct_size= task_hand_larger;
-  current_trial_list[i].data.correct_animacy = task_hand_living;
-}else if (cued_stim[i+slice].data.category=='lism'){
-  current_trial_list[i].data.correct_size= task_hand_smaller;
-  current_trial_list[i].data.correct_animacy = task_hand_living;
-}
-current_trial_list[i].rewnr = jsPsych.randomization.sampleWithoutReplacement([1,2,3,4,5,6,7,8,9,10],1)[0]; // randomise number and if it's 1: you have 20% change 80%-20%: randomisation 20% --> increase this: 1 to 10 (so in 10% of the times its one)
-current_trial_list[i].data.rewnr = current_trial_list[i].rewnr
-current_trial_list[i].data.trialnr = i+1;
-current_trial_list[i].data.blocknr = slice/80; // HC: within this 80, I have to make sure that an equal amount of words of each category used
-current_trial_list[i].data.category = cued_stim[i+slice].data.category; // HC: probably have to change this too
-current_trial_list[i].data.transition = "nonfirst";
-if (task_hand_living == task_hand_animacy.left){
-  if (cued_stim[i+slice].data.category == 'lism' || cued_stim[i+slice].data.category == 'nola'){
-    current_trial_list[i].data.congruency = 'congruent'
-  }else{
-    current_trial_list[i].data.congruency = 'incongruent'
+  // HC NEW: PROBLEM ARRISES WITH cued_stim[i+slice] -> What to do with the i+slice? alternative? 
+  // which hand is correct with response key
+  for (i = 1; i<ntrials; i++){
+  current_trial_list[i].stimulus = cued_stim[i+slice].stimulus; // HC NEW PROBLEM: Here cued_stim[i+slice] what to do with the i??????
+  //console.log(current_trial_list[i].stimulus)
+  current_trial_list[i].choices = [task_hand_smaller, task_hand_larger,task_hand_living,task_hand_nonliving];
+  if (cued_stim[i+slice].data.category=='nola'){
+    current_trial_list[i].data.correct_size = task_hand_larger;
+    current_trial_list[i].data.correct_animacy= task_hand_nonliving;
+  }else if (cued_stim[i+slice].data.category=='nosm'){
+    current_trial_list[i].data.correct_size = task_hand_smaller;
+    current_trial_list[i].data.correct_animacy = task_hand_nonliving;
+  }else if (cued_stim[i+slice].data.category=='lila'){
+    current_trial_list[i].data.correct_size= task_hand_larger;
+    current_trial_list[i].data.correct_animacy = task_hand_living;
+  }else if (cued_stim[i+slice].data.category=='lism'){
+    current_trial_list[i].data.correct_size= task_hand_smaller;
+    current_trial_list[i].data.correct_animacy = task_hand_living;
   }
-}else if (task_hand_living == task_hand_animacy.right){
-  if (cued_stim[i+slice].data.category == 'nosm' || cued_stim[i+slice].data.category == 'lila'){
-    current_trial_list[i].data.congruency = 'congruent'
-  }else{
-    current_trial_list[i].data.congruency = 'incongruent'
+  current_trial_list[i].rewnr = jsPsych.randomization.sampleWithoutReplacement([1,2,3,4,5,6,7,8,9,10],1)[0]; // randomise number and if it's 1: you have 20% change 80%-20%: randomisation 20% --> increase this: 1 to 10 (so in 10% of the times its one)
+  current_trial_list[i].data.rewnr = current_trial_list[i].rewnr
+  current_trial_list[i].data.trialnr = i+1;
+  current_trial_list[i].data.blocknr = slice/80; // HC: within this 80, I have to make sure that an equal amount of words of each category used
+  current_trial_list[i].data.category = cued_stim[i+slice].data.category; // HC: probably have to change this too
+  current_trial_list[i].data.transition = "nonfirst";
+  if (task_hand_living == task_hand_animacy.left){
+    if (cued_stim[i+slice].data.category == 'lism' || cued_stim[i+slice].data.category == 'nola'){
+      current_trial_list[i].data.congruency = 'congruent'
+    }else{
+      current_trial_list[i].data.congruency = 'incongruent'
+    }
+  }else if (task_hand_living == task_hand_animacy.right){
+    if (cued_stim[i+slice].data.category == 'nosm' || cued_stim[i+slice].data.category == 'lila'){
+      current_trial_list[i].data.congruency = 'congruent'
+    }else{
+      current_trial_list[i].data.congruency = 'incongruent'
+    }
   }
-}
-}
+  }
 
 
-/*if (current_trial_list[i].data.rewnr == 1){
-  current_trial_list[i].rewdisplayswitch = '<div style="font-size:30px;">' +'<p>+5&#162;</p>' + '</div>'
-  current_trial_list[i].rewardswitch = 0.05
-  current_trial_list[i].rewdisplayrep = '<div style="font-size:30px;">' +'<p>+&#xa3;2</p>' + '</div>'
-  current_trial_list[i].rewardrep = 2.00
-}else{
-  current_trial_list[i].rewdisplayswitch = '<div style="font-size:30px;">' + '<p>+&#xa3;2</p>' + '</div>'
-  current_trial_list[i].rewardswitch = 2.00
-  current_trial_list[i].rewdisplayrep = '<div style="font-size:30px;">' +'<p>+5&#162;</p>' + '</div>'
-  current_trial_list[i].rewardrep = 0.05
-};*/
-return current_trial_list
-};
+  /*if (current_trial_list[i].data.rewnr == 1){
+    current_trial_list[i].rewdisplayswitch = '<div style="font-size:30px;">' +'<p>+5&#162;</p>' + '</div>'
+    current_trial_list[i].rewardswitch = 0.05
+    current_trial_list[i].rewdisplayrep = '<div style="font-size:30px;">' +'<p>+&#xa3;2</p>' + '</div>'
+    current_trial_list[i].rewardrep = 2.00
+  }else{
+    current_trial_list[i].rewdisplayswitch = '<div style="font-size:30px;">' + '<p>+&#xa3;2</p>' + '</div>'
+    current_trial_list[i].rewardswitch = 2.00
+    current_trial_list[i].rewdisplayrep = '<div style="font-size:30px;">' +'<p>+5&#162;</p>' + '</div>'
+    current_trial_list[i].rewardrep = 0.05
+  };*/
+  return current_trial_list
+  };
 
 // HC NEW: Best block loop: for blocki in n_block // by making 8 blocks instd of 4 -> uneven blocks: cued; even blocks: masked
-// HC NEW : current_trial_list_block1 = blocklists_list(0)
-// HC NEW : current_trial_list_block2 = blocklists_list(1)
+// HC NEW: beneath here, I changed what Leslie previously did
+current_trial_list_block1 = blocklists_list(0) // HC NEW
+current_trial_list_block2 = blocklists_list(1) // HC NEW
+current_trial_list_block3 = blocklists_list(2) // HC NEW
+current_trial_list_block4 = blocklists_list(3) // HC NEW
+current_trial_list_block5 = blocklists_list(4) // HC NEW
+current_trial_list_block6 = blocklists_list(5) // HC NEW
+current_trial_list_block7 = blocklists_list(6) // HC NEW
+current_trial_list_block8 = blocklists_list(7) // HC NEW
+
 // ...
 // HC NEW : current_trial_list_block8 = blocklists_list(7)
 
-current_trial_list_block1 = makestimlist(0) // HCslices --> change this
-current_trial_list_block2 = makestimlist(80)
-current_trial_list_block3 = makestimlist(160)
-current_trial_list_block4 = makestimlist(240)
+// OLD LESLIE: current_trial_list_block1 = makestimlist(0) // HCslices --> change this
+// OLD LESLIE: current_trial_list_block2 = makestimlist(80)
+// OLD LESLIE: current_trial_list_block3 = makestimlist(160)
+// OLD LESLIE: current_trial_list_block4 = makestimlist(240)
+
 //current_trial_list_baseline =current_trial_list_baseline.slice(0,10)
 //current_trial_list_block1 =current_trial_list_block1.slice(0,10)
 //current_trial_list_block2 =current_trial_list_block2.slice(0,10)
