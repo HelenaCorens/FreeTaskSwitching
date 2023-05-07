@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Herkenbaarheid Belgische Politie</title>
+        <!--Import jspsych-->
+        <script src="../jspsych/jspsych.js"></script>
+        <!--Import keyboard response plugin-->
+        <script src="../jspsych/plugin-html-keyboard-response.js"></script>
+        <script src="../jspsych/plugin-image-keyboard-response.js"></script>
+        <!--Preload stimuli to avoid lag-->
+        <script src="../jspsych/plugin-preload.js"></script>
+        <!--Import jsPsych style sheet-->
+        <link href="../jspsych/jspsych.css" rel="stylesheet" type="text/css"/>
+    </head>
+    <script>
+      lism_word = ["algae","ant","apple","apricot","asparagus","avocado","bacteria","banana","bean","bee","beetle",
+          "berry","blueberry","bug","butterfly","cabbage","carrot","caterpillar","cauliflower","celery","cherry",
+          "cockatoo","crab","crow","daisy","dove","flea","frog","fruit","germ","goldfish","grape","grasshopper",
+          "hamster","hornet","insect","kitten","leaf","lemon","lice","lily","lime","melon","mice","mosquito","moth",
+          "mushroom","newt","olive","onion","orange","parsley","peach","pear","peas","pigeon","plum","potato","radish",
+          "raspberry","rat","robin","rodent","rose","salamander","sardine","shrimp","snail","sparrow","spider","spinach",
+          "squirrel","strawberry","tick","toad","tomato","tulip","wasp","weasel","worm"
+      ];
+
+      lila_word = ["aardvark","alligator","anaconda","antelope","ape","baboon","bear","beast","beaver","bobcat",
+          "buffalo","bull","camel","cedar","cheetah","chimpanzee","cougar","cow","coyote","crocodile","deer","dog",
+          "dolphin","donkey","dragon","eagle","elephant","elk","elm","fir","flamingo","gazelle","giraffe","goat",
+          "gorilla","hawk","hippo","hog","hyena","kangaroo","leopard","lion","llama","maple","monkey","moose","mule",
+          "oak","octopus","ostrich","otter","ox","panda","panther","peacock","penguin","pig","pony","porpoise",
+          "primate","ram","redwood","reindeer","rhinoceros","serpent","shark","sheep","shrub","stallion","stork",
+          "swan","tiger","tree","vulture","walrus","whale","wildebeest","wolf","wolverine","zebra"
+      ];
+
+      nosm_word = ["ashtray","badge","bandage","beaker","bracelet","brick","button","calculator","candle","card",
+          "cassette","chalk","chopsticks","cigar","coin","comb","compass","cork","coupon","crayon","diamond","dice",
+          "dime","emerald","eraser","flask","fork","gem","glove","handcuffs","harmonica","jewel","keys","knob","knot",
+          "lock","marble","medal","mitten","mug","napkin","needle","neutron","nickel","paperclip","pebble","peg",
+          "penny","pin","pliers","postcard","puck","razor","receipt","ruby","sandal","sapphire","scalpel","scissors",
+          "screwdriver","shampoo","shoe","soap","sock","soda","softball","spoon","stamp","staple","syringe","tack",
+          "teapot","thimble","ticket","toothbrush","tweezers","wallet","whistle","wrench","zipper"
+      ];
+
+      nola_word = ["alley","ambulance","anchor","asteroid","balcony","barrel","bathtub","bicycle","billboard",
+          "booth","boulder","cab","canal","cannon","canoe","cart","casket","castle","cavern","chimney","comet",
+          "couch","dorm","dryer","dungeon","escalator","ferry","fireplace","galaxy","garage","glacier","gym",
+          "hammock","hut","iceberg","igloo","jeep","jet","jupiter","keg","kite","limousine","locomotive",
+          "luggage","mall","mannequin","mansion","mattress","motel","motorcycle","oven","parachute","patio",
+          "pier","raft","rocket","rowboat","saturn","saxophone","shield","silo","sleigh","sofa","steamboat",
+          "stove","stretcher","surfboard","tank","taxi","tent","toilet","tomb","tower","treadmill","tuba","vault",
+          "volcano","windmill","windshield","yacht"
+      ];
+
+
+    var lists_list = [lism_word, lila_word, nosm_word, nola_word]; 
+    var shuffled_list = []; // empty list of lists_list but shuffled later
+
+    lists_list.forEach(listi => jsPsych.randomization.repeat(listi, 1))
+    console.log(lists_list)
+    
+    for (var listi = 0; listi < lists_list.length; listi++){
+      
+      shuffled_list.push(jsPsych.randomization.repeat(listi, 1)); // each has 4 lists shuffled within each category
+    };
+    var blocklists_list = []; 
+    var n_blocks = 8 // 4 blocks but within each block 2 parts (cued - noncued)
+    for (var blocki = 0; blocki< n_blocks; blocki++){
+      var blocklisti = [];
+      for (var listi = 0; listi< shuffled_list.length; listi++){
+        console.log(listi)
+        blocklisti.concat(listi.slice((blocki * 10), ((blocki + 1) * 10))); // take 10 words of each category; already shuffled within category BUT still lism-lila... non shuffled
+      };
+      blocklists_list.push(jsPsych.randomization.repeat(blocklisti, 1)); //shuffle blocklist so you don't have each category next to another // blocklist_list n blocks long - each list in this should have same amount of words
+    };
+
+    console.log(blocklists_list)
+
+
+
+    </script>
+
+</html>
