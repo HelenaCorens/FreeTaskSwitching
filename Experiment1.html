@@ -299,6 +299,7 @@ var points = {
   trial_duration: 500,
   choices: jsPsych.NO_KEYS,
 };
+console.log(jsPsych.data.get())
 
 var points_masked = {
   type: 'html-keyboard-response',
@@ -498,11 +499,13 @@ var survey_2 = {
 
 function getpayouttrials(blocknr) {
   for (i = 1; i < 81; i++) {//81
-    var reward = jsPsych.data.get().filter({target: "target", blocknr: blocknr, trialnr: i}).select('reward').values[0];
+    var reward = jsPsych.data.get().filter({target: "target", trialnr: i}).select('reward').values[0];
     sum = sum + reward
   }
   return [sum]//payout
 }
+
+console.log(jsPsych.data.get().filter({target: "target"}))
 
 var payout = {
   type: 'html-keyboard-response',
