@@ -84,7 +84,6 @@ for (var blocki = 0; blocki< n_blocks; blocki++){
 };
 console.log(blocklists_list);
 
-
 var hand = [{
   left: 's',
   right: 'd',
@@ -146,7 +145,7 @@ function makestimlist(blocki){
         current_trial_list[i].data.correct_size = task_hand_smaller;
         current_trial_list[i].data.correct_animacy = task_hand_living;
       }
-      current_trial_list[i].stimulus = current_trial_list[i].stimulus; // HC NEW: 'blocklists_list' was previously: "cued_stim[slice] 
+     // HC NEW: 'blocklists_list' was previously: "cued_stim[slice] 
       // HC OLD: slice creates all the functions - slice 0-80-160 --> line 226// I shuffle within category
       //console.log(current_trial_list[0].stimulus)
 
@@ -155,6 +154,7 @@ function makestimlist(blocki){
       current_trial_list[i].data.trialnr = i+(ntrials*blocki); // to make sure you don't overwrite the data
 
       current_trial_list[i].trialnr = i;
+      current_trial_list[i].blocknr = blocki;
       current_trial_list[i].data.blocknr = blocki;
 
     
@@ -210,6 +210,8 @@ current_trial_list_block5 = makestimlist(4)
 current_trial_list_block6 = makestimlist(5) 
 current_trial_list_block7 = makestimlist(6) 
 current_trial_list_block8 = makestimlist(7) 
+
+console.log(current_trial_list_block1);
 
 var nola_practice = ['car','closet','train'];//
 var lila_practice = ['cow','dinosaur','hedge'];//
